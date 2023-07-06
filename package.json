@@ -1,0 +1,7 @@
+{
+    "name": "url_shortner_go",
+    "scripts": {
+        "dev": "nodemon --exec go run main.go --signal SIGTERM",
+        "prepare": "npm i -g nodemon kill-port"
+    }
+}
