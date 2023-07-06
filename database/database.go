@@ -16,10 +16,10 @@ var DBClient *sql.DB
 
 const (
 	host     = "localhost"
-	port     = 5439
-	user     = "root"
+	port     = 5432
+	user     = "postgres"
 	password = "1471"
-	dbname   = "urlshortner"
+	dbname   = "urlShortner"
 )
 
 func ConnectDB() error {
@@ -29,6 +29,7 @@ func ConnectDB() error {
 		log.Printf("failed to connect to database: %v", err)
 		return err
 	} else {
+		log.Printf("Connected to database")
 		DBClient = db
 	}
 	return nil
