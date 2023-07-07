@@ -1,4 +1,4 @@
-CREATE TABLE urls (
+CREATE TABLE IF NOT EXISTS urls (
     id SERIAL PRIMARY KEY,
     location TEXT,
     alias TEXT NOT NULL UNIQUE,
@@ -8,12 +8,11 @@ CREATE TABLE urls (
     createdat TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    username TEXT,
-    gmail VARCHAR(100),
+    gmail VARCHAR(50) UNIQUE,
     password VARCHAR(100),
-    authkey  VARCHAR(100),
-    updateat TIMESTAMP,
+    authkey  VARCHAR(100) UNIQUE,
+    updatedat TIMESTAMP DEFAULT NOW(),
     createdat TIMESTAMP DEFAULT NOW()
 )

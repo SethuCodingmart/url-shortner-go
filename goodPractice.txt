@@ -1,0 +1,21 @@
+switch err {
+    case sql.ErrNoRows:
+        log.Printf("no rows are present for alubum with id: %d", id)
+    case nil:
+        log.Printf("we are able to fetch %d", id)
+    default:
+        e := fmt.Sprintf("error: %v occurred while reading the databse", err)
+    }
+
+    n, err := result.RowsAffected()
+    if err != nil {
+        log.Printf("error occurred while checking the returned result from database after insertion: %v", err)
+        return
+    }
+
+    // if no record was inserted, let us say client has failed
+    if n == 0 {
+        e := "could not insert the record, please try again after sometime"
+        log.Println(e)
+        return
+    }
