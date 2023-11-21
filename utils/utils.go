@@ -31,3 +31,15 @@ func CheckPassword(password, hashedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
+
+func GenerateRandomAlphaNumericString(length int) (string, error) {
+	charset := "abcdefghijklmnopqrstuvwxyz12345678"
+	chars := make([]byte, length)
+
+	for i := 0; i < length; i++ {
+		randomInt, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		chars[i] = charset[randomInt.Int64()]
+	}
+
+	return string(chars), nil
+}

@@ -1,0 +1,328 @@
+{
+    "collection": {
+        "info": {
+            "_postman_id": "a8d25a18-3609-4f11-9139-35c83d08773c",
+            "name": "URL Shortner",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+            "updatedAt": "2023-07-07T07:41:34.000Z",
+            "uid": "17986900-a8d25a18-3609-4f11-9139-35c83d08773c"
+        },
+        "item": [
+            {
+                "name": "Health Check",
+                "id": "a42d7381-c3f1-4dde-aa50-fca143a5026c",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "auth": {
+                        "type": "noauth"
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{base_url}}/health-check",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            "health-check"
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-a42d7381-c3f1-4dde-aa50-fca143a5026c"
+            },
+            {
+                "name": "Register",
+                "id": "b5396127-4c7f-4bd8-9f93-e497e6d2f998",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\r\n    \"gmail\": \"rpsethu1471@gmail.com\",\r\n    \"password\": \"1234\"\r\n}",
+                        "options": {
+                            "raw": {
+                                "language": "json"
+                            }
+                        }
+                    },
+                    "url": {
+                        "raw": "{{base_url}}/register",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            "register"
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-b5396127-4c7f-4bd8-9f93-e497e6d2f998"
+            },
+            {
+                "name": "Login",
+                "id": "92177069-63f3-4f62-950f-4037ff2d214f",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\r\n    \"gmail\": \"rpsethu1471@gmail.com\",\r\n    \"password\": \"1234\"\r\n}",
+                        "options": {
+                            "raw": {
+                                "language": "json"
+                            }
+                        }
+                    },
+                    "url": {
+                        "raw": "{{base_url}}/login",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            "login"
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-92177069-63f3-4f62-950f-4037ff2d214f"
+            },
+            {
+                "name": "Get User",
+                "id": "da4460d8-bdfe-4b88-baaf-7a362df426eb",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": [
+                            {
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "",
+                            "value": "",
+                            "type": "text",
+                            "disabled": true
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{base_url}}/user",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            "user"
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-da4460d8-bdfe-4b88-baaf-7a362df426eb"
+            },
+            {
+                "name": "Create Auth Key",
+                "id": "7bd11cb8-f7d1-48a5-bfae-1a7dbf774683",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": [
+                            {
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "method": "GET",
+                    "header": [
+                        {
+                            "key": "",
+                            "value": "",
+                            "type": "text"
+                        }
+                    ],
+                    "url": {
+                        "raw": "{{base_url}}/create-authkey",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            "create-authkey"
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-7bd11cb8-f7d1-48a5-bfae-1a7dbf774683"
+            },
+            {
+                "name": "Save Url",
+                "id": "df657c42-c322-4c27-83b3-df6286c11ccc",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": [
+                            {
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "method": "POST",
+                    "header": [
+                        {
+                            "key": "authkey",
+                            "value": "{{authkey}}",
+                            "type": "text",
+                            "disabled": true
+                        }
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": "{\r\n    \"location\": \"https://codingmart.com\",\r\n    \"alias\": \"cdm\"\r\n}",
+                        "options": {
+                            "raw": {
+                                "language": "json"
+                            }
+                        }
+                    },
+                    "url": {
+                        "raw": "{{base_url}}/save-url",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            "save-url"
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-df657c42-c322-4c27-83b3-df6286c11ccc"
+            },
+            {
+                "name": "Redirect Url",
+                "id": "4e66b299-b198-4a7b-b517-03bac24518ca",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{base_url}}/:alias",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            ":alias"
+                        ],
+                        "variable": [
+                            {
+                                "key": "alias",
+                                "value": "gazlk",
+                                "description": "tufna"
+                            }
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-4e66b299-b198-4a7b-b517-03bac24518ca"
+            },
+            {
+                "name": "Get URLs of Particular User",
+                "id": "3ac3dbf5-5946-4150-bab9-6860bf72d415",
+                "protocolProfileBehavior": {
+                    "disableBodyPruning": true
+                },
+                "request": {
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": [
+                            {
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                        "raw": "{{base_url}}/get-urls",
+                        "host": [
+                            "{{base_url}}"
+                        ],
+                        "path": [
+                            "get-urls"
+                        ]
+                    }
+                },
+                "response": [],
+                "uid": "17986900-3ac3dbf5-5946-4150-bab9-6860bf72d415"
+            }
+        ],
+        "event": [
+            {
+                "listen": "prerequest",
+                "script": {
+                    "id": "842dec4b-7c1d-4c2c-a490-bfb4974b297f",
+                    "type": "text/javascript",
+                    "exec": [
+                        ""
+                    ]
+                }
+            },
+            {
+                "listen": "test",
+                "script": {
+                    "id": "dc3c7649-9b9f-4914-895f-abd76ad67814",
+                    "type": "text/javascript",
+                    "exec": [
+                        ""
+                    ]
+                }
+            }
+        ],
+        "variable": [
+            {
+                "id": "70f16fdd-7ae3-44e9-aac2-6809af10fa93",
+                "key": "base_url",
+                "value": "localhost:3001",
+                "type": "string"
+            },
+            {
+                "id": "be73ca93-fb60-482c-a409-2a64c0ab488f",
+                "key": "token",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODg3OTY0MDEsImdtYWlsIjoic2V0aHUxNDcxQGdtYWlsLmNvbSIsInVzZXJJZCI6IjEifQ.Y7RRwePbVry8SSTYN8-NF6NusBhUNY8SESxloeK6iRw",
+                "type": "string"
+            },
+            {
+                "id": "3ef529d3-eaaa-4cb7-8e66-e3a5ff740bcb",
+                "key": "authkey",
+                "value": "0a6ea8d2-e134-4886-8b29-ab17b67fce91",
+                "type": "string"
+            }
+        ]
+    }
+}

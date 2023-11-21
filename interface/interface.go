@@ -20,3 +20,36 @@ type Login struct {
 	Gmail    string `json:"gmail"`
 	Password string `json:"password"`
 }
+
+type Register struct {
+	Gmail    string `json:"gmail"`
+	Password string `json:"password"`
+	Otp      string `json:"otp"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Phone    string `json:"phone"`
+}
+
+type SendSignUpOTP struct {
+	Gmail string `json:"gmail"`
+}
+
+type ForgetPassword struct {
+	Gmail    string `json:"gmail"`
+	Password string `json:"password"`
+	Otp      string `json:"otp"`
+}
+
+type OTPType string
+
+const (
+	FORGOT_PASSWORD OTPType = "FORGOT_PASSWORD"
+	SIGNUP          OTPType = "SIGNUP"
+	LOGIN           OTPType = "LOGIN"
+)
+
+type SaveOTP struct {
+	Key   string  `json:"key"`
+	Value string  `json:"value"`
+	Type  OTPType `json:"type"`
+}

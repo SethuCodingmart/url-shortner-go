@@ -14,6 +14,8 @@ import (
 	store "urlShortner/store"
 	utils "urlShortner/utils"
 
+	"net/smtp"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -153,7 +155,7 @@ func authMiddleware(c *gin.Context) {
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error":      "Unauthorized",
-				"errMessage": errToken.Error(),
+				"errMessage": err.Error(),
 			})
 			return
 		}
@@ -197,6 +199,29 @@ func LoadEnv() {
 	}
 }
 
+func sendMail(body string, subject string) bool {
+	from := "rpsethu1471@gmail.com"
+	pass := "rxhchzvnsrmlxuyc"
+	to := "sethu1471@gmail.com"
+
+	msg := "From: " + from + "\n" +
+		"To: " + to + "\n" +
+		"Subject:" + subject + "\n\n" +
+		body
+
+	err := smtp.SendMail("smtp.gmail.com:587",
+		smtp.PlainAuth("", from, pass, "smtp.gmail.com"),
+		from, []string{to}, []byte(msg))
+
+	if err != nil {
+		log.Printf("smtp error: %s", err)
+		return false
+	}
+
+	log.Print("sent mail")
+	return true
+}
+
 func main() {
 	fmt.Printf("Hello Go URL Shortener !🚀")
 	LoadEnv()
@@ -209,7 +234,7 @@ func main() {
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3001"},
+		AllowOrigins:     []string{"http://localhost:3001", "http://localhost:5173", "http://192.168.29.173:5173"},
 		AllowMethods:     []string{"GET", "POST"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -292,45 +317,159 @@ func main() {
 		response.Response(c, 200, "URLS FETCHEED SUCCESS", true, result)
 	})
 
-	r.POST("/register", func(c *gin.Context) {
-		var user database.Users
-		if err := c.BindJSON(&user); err != nil {
-			response.Response(c, 400, "SOMETHING WENT WRONG!!", false, err.Error())
+	r.POST("/sendforgetpasswordotp", func(ctx *gin.Context) {
+		var email interfaceGo.SendSignUpOTP
+		if err := ctx.BindJSON(&email); err != nil {
+			response.Response(ctx, 400, err.Error(), false, nil)
 			return
 		}
-		hashedPassword, errHash := utils.HashPassword(user.Password)
-		if errHash != nil {
-			response.Response(c, 400, "SOMETHING WENT WRONG!!", false, errHash.Error())
+		checkUser, err := store.CheckUserExsist(email.Gmail)
+		if !checkUser {
+			response.Response(ctx, 400, "User not found.", false, nil)
 			return
 		}
-		result, err := store.CreateUser(user.Gmail, hashedPassword)
 		if err != nil {
-			response.Response(c, 400, "SOMETHING WENT WRONG!!", false, err.Error())
+			response.Response(ctx, 400, "Something Went Wrong. Please Try Again", false, nil)
 			return
 		}
-		response.Response(c, 200, "USER CREATED SUCCESS", true, result)
+		randomOtp, err := utils.GenerateRandomAlphaNumericString(6)
+		if err != nil {
+			response.Response(ctx, 400, "OTP Generation Failed.", false, nil)
+			return
+		}
+		saveOtpParams := interfaceGo.SaveOTP{Key: email.Gmail, Value: randomOtp, Type: interfaceGo.FORGOT_PASSWORD}
+		saveOtp, err := store.SaveOTP(saveOtpParams)
+		if err != nil {
+			response.Response(ctx, 400, "OTP Save Failed.", false, nil)
+			return
+		}
+		if saveOtp {
+			message := `Your Forget Password OTP for PlayURL is ` + randomOtp + ".\n\nThank You."
+			if result := sendMail(message, "PlayURL - Forget Password"); !result {
+				response.Response(ctx, 400, "Mail not sent", false, nil)
+				return
+			}
+			response.Response(ctx, 200, "Mail Sent", true, nil)
+		} else {
+			response.Response(ctx, 400, "Mail Sent Failed. Try Again.", false, nil)
+		}
+	})
+
+	r.POST("/forgetpassword", func(c *gin.Context) {
+		var data interfaceGo.ForgetPassword
+		if err := c.BindJSON(&data); err != nil {
+			response.Response(c, 400, err.Error(), false, nil)
+			return
+		}
+		otpVerify, err := store.GetOTP(data.Gmail, "FORGOT_PASSWORD")
+		if err != nil {
+			response.Response(c, 400, err.Error(), false, nil)
+			return
+		}
+		if otpVerify.Value != data.Otp {
+			response.Response(c, 400, "OTP not matched,", false, nil)
+			return
+		}
+		hashedPassword, errHash := utils.HashPassword(data.Password)
+		if errHash != nil {
+			response.Response(c, 400, errHash.Error(), false, nil)
+			return
+		}
+		result, err := store.UpdateUser(data.Gmail, hashedPassword)
+		if err != nil {
+			response.Response(c, 400, err.Error(), false, nil)
+			return
+		}
+		response.Response(c, 200, "Password Changed.", true, result)
+	})
+
+	r.POST("/sendsignupotp", func(ctx *gin.Context) {
+		var data interfaceGo.SendSignUpOTP
+		if err := ctx.BindJSON(&data); err != nil {
+			response.Response(ctx, 400, err.Error(), false, nil)
+			return
+		}
+		checkUser, err := store.CheckUserExsist(data.Gmail)
+		if checkUser {
+			response.Response(ctx, 400, "User already registered.", false, nil)
+			return
+		}
+		if err != nil {
+			response.Response(ctx, 400, err.Error(), false, nil)
+			return
+		}
+		randomOtp, err := utils.GenerateRandomAlphaNumericString(6)
+		if err != nil {
+			response.Response(ctx, 400, "OTP Generation Failed.", false, nil)
+			return
+		}
+		saveOtpParams := interfaceGo.SaveOTP{Key: data.Gmail, Value: randomOtp, Type: interfaceGo.SIGNUP}
+		saveOtp, err := store.SaveOTP(saveOtpParams)
+		if err != nil {
+			response.Response(ctx, 400, "OTP Save Failed.", false, nil)
+			return
+		}
+		if saveOtp {
+			message := `Your Verification OTP for PlayURL Signup is ` + randomOtp + ".\n\nThank You."
+			if result := sendMail(message, "PlayURL Signup - Verification OTP"); !result {
+				response.Response(ctx, 400, "Mail not sent", false, nil)
+				return
+			}
+			response.Response(ctx, 200, "Mail Sent", true, nil)
+		} else {
+			response.Response(ctx, 400, "Mail Sent Failed. Try Again.", false, nil)
+		}
+	})
+
+	r.POST("/register", func(c *gin.Context) {
+		var data interfaceGo.Register
+		if err := c.BindJSON(&data); err != nil {
+			response.Response(c, 400, err.Error(), false, nil)
+			return
+		}
+		otpVerify, err := store.GetOTP(data.Gmail, "SIGNUP")
+		if err != nil {
+			response.Response(c, 400, err.Error(), false, nil)
+			return
+		}
+		if otpVerify.Value != data.Otp {
+			response.Response(c, 400, "OTP not matched,", false, nil)
+			return
+		}
+		hashedPassword, errHash := utils.HashPassword(data.Password)
+		if errHash != nil {
+			response.Response(c, 400, errHash.Error(), false, nil)
+			return
+		}
+		result, err := store.CreateUser(data.Gmail, hashedPassword, data.Username, data.Name, data.Phone)
+		if err != nil {
+			response.Response(c, 400, err.Error(), false, nil)
+			return
+		}
+		response.Response(c, 200, "User Created Success.", true, result)
 	})
 
 	r.POST("/login", func(c *gin.Context) {
 		var creds interfaceGo.Login
 		if err := c.BindJSON(&creds); err != nil {
-			response.Response(c, 400, "SOMETHING WENT WRONG!!", false, err.Error())
+			response.Response(c, 400, "Some fields are unfilled!!", false, err.Error())
 			return
 		}
 		result, err := store.GetUserWithGmailAndPassword(creds.Gmail, creds.Password)
 		if err != nil {
-			response.Response(c, 400, "SOMETHING WENT WRONG!!", false, err.Error())
+			response.Response(c, 400, err.Error(), false, nil)
 			return
 		}
 		token, err := GenerateToken(result.Id, result.Gmail)
 		if err != nil {
-			response.Response(c, 400, "SOMETHING WENT WRONG!!", false, err.Error())
+			response.Response(c, 400, err.Error(), false, nil)
 			return
 		}
-		resultRes := make(map[string]interface{})
-		resultRes["token"] = token
-		resultRes["gmail"] = result.Gmail
-		response.Response(c, 200, "USER LOGIN SUCCESS!!", true, resultRes)
+		resultResponse := make(map[string]interface{})
+		resultResponse["token"] = token
+		resultResponse["gmail"] = result.Gmail
+		resultResponse["username"] = result.Username
+		response.Response(c, 200, "USER LOGIN SUCCESS!!", true, resultResponse)
 	})
 
 	r.GET("/user", authMiddleware, func(c *gin.Context) {

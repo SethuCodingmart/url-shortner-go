@@ -19,7 +19,7 @@ const (
 	port     = 5432
 	user     = "postgres"
 	password = "1471"
-	dbname   = "urlShortner"
+	dbname   = "check"
 )
 
 func ConnectDB() error {
