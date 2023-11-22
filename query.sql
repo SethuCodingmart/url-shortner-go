@@ -71,10 +71,10 @@ CREATE TABLE user_workspace (
     user_id INT REFERENCES users(id),
     workspace_id INT REFERENCES workspaces(id),
     role workspace_role,
-    PRIMARY KEY (user_id, workspace_id),
     updatedat TIMESTAMP DEFAULT NOW(),
     createdat TIMESTAMP DEFAULT NOW(),
     deletedat TIMESTAMP DEFAULT NULL
+    PRIMARY KEY (user_id, workspace_id),
 );
 
 CREATE TYPE clickaction_type AS ENUM ('MAIL', 'PHONE', 'SHORTEN', 'PROFILE_BIO');

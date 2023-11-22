@@ -34,6 +34,12 @@ type SendSignUpOTP struct {
 	Gmail string `json:"gmail"`
 }
 
+type CreateWorkspace struct {
+	Name          string `json:"name"`
+	Shorthandname string `json:"shorthandname"`
+	Description   string `json:"description"`
+}
+
 type ForgetPassword struct {
 	Gmail    string `json:"gmail"`
 	Password string `json:"password"`

@@ -89,21 +89,29 @@ type AuthArrayStruct struct {
 
 var AuthArray = []AuthArrayStruct{
 	{
-		path:   "/save-url",
-		access: []string{"API", "WEB"},
-	},
-	{
 		path:   "/user",
 		access: []string{"WEB"},
 	},
 	{
-		path:   "/create-authkey",
+		path:   "/transcations",
 		access: []string{"WEB"},
 	},
 	{
-		path:   "/get-urls",
+		path:   "/create-workspace",
 		access: []string{"WEB"},
 	},
+	// {
+	// 	path:   "/save-url",
+	// 	access: []string{"API", "WEB"},
+	// },
+	// {
+	// 	path:   "/create-authkey",
+	// 	access: []string{"WEB"},
+	// },
+	// {
+	// 	path:   "/get-urls",
+	// 	access: []string{"WEB"},
+	// },
 }
 
 func checkAccess(access []string, grantAccess string) bool {
@@ -129,7 +137,8 @@ func authMiddleware(c *gin.Context) {
 		}
 		if !accessCheck {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Forbidden",
+				"error":      "Forbidden",
+				"errMessage": "Check API Path.",
 			})
 			return
 		}
@@ -169,7 +178,8 @@ func authMiddleware(c *gin.Context) {
 		}
 		if !accessCheck {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Forbidden",
+				"error":      "Forbidden",
+				"errMessage": "Check API Path.",
 			})
 			return
 		}
@@ -294,12 +304,6 @@ func main() {
 		finalResult.Alias = urlParameters.Alias
 		finalResult.Success = result
 		response.Response(c, 200, "URL SHORTEN SUCCESS", true, finalResult)
-	})
-
-	r.GET("/:alias", func(c *gin.Context) {
-		path := c.Param("alias")
-		result := store.RedirectURL(path)
-		c.Redirect(http.StatusTemporaryRedirect, result)
 	})
 
 	r.GET("/get-urls", authMiddleware, func(c *gin.Context) {
@@ -469,6 +473,7 @@ func main() {
 		resultResponse["token"] = token
 		resultResponse["gmail"] = result.Gmail
 		resultResponse["username"] = result.Username
+		resultResponse["id"] = result.Id
 		response.Response(c, 200, "USER LOGIN SUCCESS!!", true, resultResponse)
 	})
 
@@ -487,6 +492,47 @@ func main() {
 		response.Response(c, 200, "USER DATA FETCHED SUCCESS", true, user)
 	})
 
+	r.GET("/transcations", authMiddleware, func(c *gin.Context) {
+		user, exists := c.Get("user")
+		if !exists || user == nil {
+			response.Response(c, http.StatusForbidden, "User Not Found", false, "USER NOT FOUND!!")
+			return
+		}
+		userId := user.(*database.Users).Id
+		result, err := store.GetTransactions(userId)
+		if err != nil {
+			response.Response(c, 400, err.Error(), false, nil)
+			return
+		}
+		response.Response(c, 200, "Transcation Fetched Success.", true, result)
+	})
+
+	r.POST("/create-workspace", authMiddleware, func(ctx *gin.Context) {
+		user, exists := ctx.Get("user")
+		if !exists || user == nil {
+			response.Response(ctx, http.StatusForbidden, "User Not Found", false, "USER NOT FOUND!!")
+			return
+		}
+		userId := user.(*database.Users).Id
+		var data interfaceGo.CreateWorkspace
+		if err := ctx.BindJSON(&data); err != nil {
+			response.Response(ctx, 400, "Some fields are unfilled!!", false, err.Error())
+			return
+		}
+		if len(data.Shorthandname) < 4 {
+			response.Response(ctx, 400, "ShortHandName should contain atleast 5 letters.", false, nil)
+			return
+		}
+		result, err := store.SaveWorkspace(data.Name, data.Shorthandname, data.Description, userId)
+		if err != nil {
+			response.Response(ctx, 400, err.Error(), false, nil)
+			return
+		}
+		returnData := make(map[string]interface{})
+		returnData["workspaceId"] = result
+		response.Response(ctx, 200, "Workspace Created Success.", true, returnData)
+	})
+
 	r.GET("/create-authkey", authMiddleware, func(c *gin.Context) {
 		user, exists := c.Get("user")
 		if !exists || user == nil {
@@ -501,10 +547,16 @@ func main() {
 			response.Response(c, 400, "SOMETHING WENT WRONG!!", false, err.Error())
 			return
 		}
-		resultResp := make(map[string]interface{})
-		resultResp["authkey"] = randString
-		resultResp["status"] = result
-		response.Response(c, 200, "AUTH KEY CREATED SUCCESS", true, resultResp)
+		resultData := make(map[string]interface{})
+		resultData["authkey"] = randString
+		resultData["status"] = result
+		response.Response(c, 200, "AUTH KEY CREATED SUCCESS", true, resultData)
+	})
+
+	r.GET("/:alias", func(c *gin.Context) {
+		path := c.Param("alias")
+		result := store.RedirectURL(path)
+		c.Redirect(http.StatusTemporaryRedirect, result)
 	})
 
 	// r.GET("/page/404", func(c *gin.Context) {

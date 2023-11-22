@@ -50,6 +50,36 @@ func CheckUserExsist(gmail string) (bool, error) {
 	return true, nil
 }
 
+func GetTransactions(userid int) ([]database.Transactions, error) {
+	q := `SELECT id, user_id, value, tfor, type, createdat from transcations WHERE user_id = $1`
+	resultRow, err := database.DBClient.Query(q, userid)
+	switch err {
+	case sql.ErrNoRows:
+		log.Printf("ERROR NO ROWS FOUND: %v", err)
+		return nil, err
+	case nil:
+		result := []database.Transactions{}
+		for resultRow.Next() {
+			var id, user_id, value int
+			var tfor database.Transcation_for
+			var _type database.Transcation_type
+			var createdat *time.Time
+
+			err := resultRow.Scan(&id, &user_id, &value, &tfor, &_type, &createdat)
+			if err != nil {
+				log.Println("ERROR WHILE SCAN ROW", err.Error())
+				continue
+			}
+			newObject := database.Transactions{Id: id, UserID: user_id, Tfor: tfor, Type: _type, Value: value, CreatedAt: *createdat, UpdatedAt: nil}
+			result = append(result, newObject)
+		}
+		return result, nil
+	default:
+		log.Println("INTERNAL DATABASE ERROR := ", err.Error())
+		return nil, err
+	}
+}
+
 func GetUrlsWithUserId(userId int) ([]database.Urls, error) {
 	q := `SELECT id, location, alias, userid, isexpired, expiresat, createdat from urls where userId = $1`
 	resultRow, err := database.DBClient.Query(q, userId)
@@ -102,6 +132,46 @@ func UpdateUser(_mail string, _password string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func SaveAuthkey(name string, workspace_id int, authkey string) (bool, error) {
+	// ISACTIVE FLAG NEED TO ADD IN DB AND HERE
+	q := `INSERT INTO authkey (name, authkey, workspace_id) VALUES ($1, $2, $3) RETURNING id`
+	var lastInsertID int
+	ierr := database.DBClient.QueryRow(q, name, authkey, workspace_id).Scan(&lastInsertID)
+	if ierr != nil {
+		log.Printf("ERROR WHILE ADDING USER: %v", ierr)
+		return false, ierr
+	}
+	return true, nil
+}
+
+func SaveWorkspace(name string, shorthandname string, description string, user_id int) (*int, error) {
+	tx, err := database.DBClient.Begin()
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	q := `INSERT INTO workspaces (name, shorthandname, description) VALUES ($1, $2, $3) RETURNING id`
+	var lastInsertID int
+	ierr := tx.QueryRow(q, name, shorthandname, description).Scan(&lastInsertID)
+	if ierr != nil {
+		tx.Rollback()
+		log.Printf("ERROR WHILE ADDING USER: %v", ierr)
+		return nil, ierr
+	}
+	uw := `INSERT INTO user_workspace (user_id, workspace_id, role) VALUES ($1, $2, $3)`
+	_, uwerr := tx.Exec(uw, user_id, lastInsertID, "ADMIN")
+
+	if uwerr != nil {
+		tx.Rollback()
+		log.Printf("ERROR WHILE ADDING CREDITS: %v", uwerr)
+		return nil, uwerr
+	}
+	if err := tx.Commit(); err != nil {
+		log.Fatal(err)
+	}
+	return &lastInsertID, nil
 }
 
 func CreateUser(_mail string, _password string, _username string, _name string, _phone string) (bool, error) {
